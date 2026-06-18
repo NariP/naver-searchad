@@ -37,6 +37,8 @@ stdout JSON (한글 라벨) → 클로드가 표로 렌더
 
 ## 주요 명령어
 
+macOS는 `./scripts/nsa <command>` 래퍼 권장(Keychain→env 자동). 아래는 환경변수 직접 사용 시.
+
 ```bash
 python3 scripts/nsa.py accounts                              # 광고계정 목록
 python3 scripts/nsa.py campaigns                             # 캠페인 목록

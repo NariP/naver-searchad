@@ -27,22 +27,30 @@ metadata:
 
 ## Prerequisites (1회)
 
-환경변수 3개. 발급: 네이버 검색광고 > 도구 > API 사용 관리.
+키 3개 필요. 발급: 네이버 검색광고 > 도구 > API 사용 관리.
 
+**macOS (권장)** — Keychain에 저장하고 `scripts/nsa` 래퍼로 실행:
 ```bash
-export NAVER_AD_API_KEY=...
-export NAVER_AD_SECRET_KEY=...
-export NAVER_AD_CUSTOMER_ID=...
+security add-generic-password -U -a "$USER" -s NAVER_AD_API_KEY     -w '값'
+security add-generic-password -U -a "$USER" -s NAVER_AD_SECRET_KEY  -w '값'
+security add-generic-password -U -a "$USER" -s NAVER_AD_CUSTOMER_ID -w '값'
+```
+
+**그 외(코덱스/CI)** — 환경변수로 직접:
+```bash
+export NAVER_AD_API_KEY=... NAVER_AD_SECRET_KEY=... NAVER_AD_CUSTOMER_ID=...
 ```
 
 ## How to call
 
+macOS Keychain 사용 시 `scripts/nsa` 래퍼(Keychain→env→nsa.py 자동):
 ```bash
-python3 scripts/nsa.py stats --ids <campaignId,adgroupId> --since 2026-06-01 --until 2026-06-17
-python3 scripts/nsa.py campaigns
-python3 scripts/nsa.py keywordtool --keywords 제주여행,게스트하우스
-python3 scripts/nsa.py report --type AD --date 2026-06-17 --out ./report.tsv
+./scripts/nsa campaigns
+./scripts/nsa stats --ids <campaignId,adgroupId> --since 2026-06-01 --until 2026-06-17
+./scripts/nsa keywordtool --keywords 제주여행,게스트하우스
+./scripts/nsa report --type AD --date 2026-06-17 --out ./report.tsv
 ```
+환경변수를 직접 쓰면 `python3 scripts/nsa.py <command>` 도 동일하게 동작.
 
 전체 명령·필드 매핑 → `reference/endpoints.md`, `reference/fields.md`.
 인증·서명 동작 → `.claude/docs/auth-signature.md`.

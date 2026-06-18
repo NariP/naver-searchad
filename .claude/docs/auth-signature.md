@@ -42,3 +42,17 @@ AWS SigV4 / PG 결제 서명 / GitHub 웹훅 `X-Hub-Signature`와 같은 계열.
 
 - 시크릿은 **환경변수에서만** 읽는다. 코드·문서·커밋·로그에 절대 노출 금지.
 - 스크립트는 키가 없으면 명확한 메시지와 함께 즉시 종료(`env_or_die`).
+
+### macOS Keychain (권장)
+
+평문(`.env`·`.zshrc`) 대신 Keychain에 암호화 저장하고, 래퍼(`scripts/nsa`)가 꺼내 환경변수로 주입한다. `nsa.py`는 환경변수만 읽으므로 코드 변경 없음.
+
+저장(1회, 사용자가 직접 — 값에 실제 키):
+```bash
+security add-generic-password -U -a "$USER" -s NAVER_AD_API_KEY     -w '값'
+security add-generic-password -U -a "$USER" -s NAVER_AD_SECRET_KEY  -w '값'
+security add-generic-password -U -a "$USER" -s NAVER_AD_CUSTOMER_ID -w '값'
+```
+실행: `./scripts/nsa <command>` (래퍼가 Keychain→env→nsa.py).
+
+이미 환경변수가 설정돼 있으면 래퍼는 Keychain을 건너뛴다(코덱스/CI 호환). 즉 코덱스 등 Keychain 없는 환경에선 환경변수로 직접 주입하면 된다.

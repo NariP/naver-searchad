@@ -2,6 +2,27 @@
 
 네이버 검색광고 스킬 설계 결정 로그(ADR). 최신이 위로.
 
+## ADR-007 — 키 보관: macOS Keychain + 셸 래퍼
+
+**Date**: 2026-06-18
+**Status**: Accepted
+
+### Context
+API 키 3개를 어디에 둘지. 평문 노출을 피하면서 클로드 코드/코덱스 양쪽에서 써야 함.
+
+### Options
+| 옵션 | 설명 |
+|---|---|
+| A. `.env`/`.zshrc` export | 평문. 백업·공유 시 유출 위험 |
+| B. macOS Keychain + 래퍼 | 암호화 저장. `security`로 꺼내 env 주입 |
+| C. 1Password CLI(`op`) | 강력하나 외부 도구 의존 |
+
+### Decision
+B. Keychain에 저장, `scripts/nsa` 래퍼가 `security find-generic-password`로 꺼내 환경변수로 주입 후 `nsa.py` 실행.
+
+### Rationale
+맥 기본 도구만으로 평문 노출 0. `nsa.py`는 환경변수만 읽으므로(변경 없음) 관심사 분리 유지. 래퍼는 이미 설정된 환경변수가 있으면 Keychain을 건너뛰어 코덱스/CI(키 없는 Keychain 환경)와도 호환. 키 저장 명령은 시크릿이 들어가므로 사용자가 직접 실행(대화/로그 노출 방지).
+
 ## ADR-006 — 키 없는 검증 수단: `_selftest` + `NSA_MOCK`
 
 **Date**: 2026-06-18
