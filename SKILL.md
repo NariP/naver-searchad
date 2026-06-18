@@ -1,0 +1,52 @@
+---
+name: naver-searchad
+description: 네이버 검색광고의 노출수·클릭수·광고비·CTR·CPC 등 성과를 조회한다(읽기 전용). 캠페인/광고그룹/키워드 목록, 기간별 성과, 대용량 리포트, 키워드 도구(연관키워드·월 조회수) 조회. 로컬 실행 전용(클로드 코드/코덱스) — 클라우드 샌드박스(코워크)에서는 네이버 차단으로 불가. 트리거 — "네이버 광고 노출수/클릭수/광고비/CTR 보여줘", "이번달 캠페인 성과", "키워드별 클릭률", "연관키워드 월 조회수", "검색광고 리포트 뽑아줘".
+metadata:
+  category: marketing
+  locale: ko-KR
+  phase: v1
+---
+
+# Naver SearchAd (네이버 검색광고 조회)
+
+네이버 검색광고 API를 감싸 성과를 조회한다. **읽기 전용**, **로컬 실행 전용**.
+
+## When to use
+
+- "지난주/이번달 캠페인별 노출·클릭·광고비 보여줘"
+- "이 키워드 CTR / CPC 어때"
+- "연관키워드랑 월간 조회수 뽑아줘"
+- "검색광고 기간 리포트 파일로 내려줘"
+- "내 광고계정 / 캠페인 / 광고그룹 / 키워드 목록"
+
+## When NOT to use
+
+- 클로드 코워크·클라우드 샌드박스 (네이버 egress 차단 — `.claude/docs/environment-policy.md`)
+- 입찰가 변경·키워드 삭제 등 **쓰기** 작업 (이 스킬은 조회만 — `.claude/docs/scope-policy.md`)
+- 네이버 검색(블로그/뉴스/쇼핑) 결과 조회 (그건 검색 Open API, 다른 도메인)
+
+## Prerequisites (1회)
+
+환경변수 3개. 발급: 네이버 검색광고 > 도구 > API 사용 관리.
+
+```bash
+export NAVER_AD_API_KEY=...
+export NAVER_AD_SECRET_KEY=...
+export NAVER_AD_CUSTOMER_ID=...
+```
+
+## How to call
+
+```bash
+python3 scripts/nsa.py stats --ids <campaignId,adgroupId> --since 2026-06-01 --until 2026-06-17
+python3 scripts/nsa.py campaigns
+python3 scripts/nsa.py keywordtool --keywords 제주여행,게스트하우스
+python3 scripts/nsa.py report --type AD --date 2026-06-17 --out ./report.tsv
+```
+
+전체 명령·필드 매핑 → `reference/endpoints.md`, `reference/fields.md`.
+인증·서명 동작 → `.claude/docs/auth-signature.md`.
+
+## Output
+
+stdout에 JSON(한글 라벨 포함). 에러는 stderr + 원인 힌트(`.claude/docs/output-policy.md`).
