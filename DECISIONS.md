@@ -2,6 +2,26 @@
 
 네이버 검색광고 스킬 설계 결정 로그(ADR). 최신이 위로.
 
+## ADR-006 — 키 없는 검증 수단: `_selftest` + `NSA_MOCK`
+
+**Date**: 2026-06-18
+**Status**: Accepted
+
+### Context
+Day 1 DoD는 키 없이 검증 가능해야 한다(ADR-005). 라이브 호출 없이 서명·폴백·라벨 로직을 어떻게 검증할지.
+
+### Options
+| 옵션 | 설명 |
+|---|---|
+| A. 외부 테스트 프레임워크(pytest) | 별도 의존성·파일 |
+| B. 스크립트 내장 `_selftest` + `NSA_MOCK` env | 의존성 0, 단일 파일 |
+
+### Decision
+B. `_selftest` 서브커맨드(서명/CTR·CPC 폴백/humanize/timestamp assert) + `NSA_MOCK=1`이면 HTTP를 가짜 응답으로 대체.
+
+### Rationale
+의존성 0 원칙(ADR-002) 유지. 단일 파일 안에서 키·네트워크 없이 핵심 로직 전부 검증. mock은 `ctr`를 일부러 빼 폴백 경로까지 탐. URLError는 egress 차단 힌트(environment-policy.md)로 연결.
+
 ## ADR-005 — 라이브 호출 검증은 Day 2로 분리
 
 **Date**: 2026-06-18

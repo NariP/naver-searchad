@@ -54,18 +54,18 @@ SKILL.md ──(자연어 매칭)──► nsa.py <command>
 
 ### 체크리스트
 
-- [ ] `scripts/nsa.py` — 서명 코어(`sign`/`headers`/`load_creds`/`env_or_die`)
-- [ ] `nsa.py` — HTTP 코어(`api_get`/`api_post`/`die_with_hint`), uri는 path만 서명
-- [ ] `nsa.py` — argparse 진입점 + 7개 명령 디스패치
-- [ ] `nsa.py` — `stats` (fields/timeRange + 한글 라벨 + CTR/CPC 폴백)
-- [ ] `nsa.py` — `accounts`/`campaigns`/`adgroups`/`keywords` 조회
-- [ ] `nsa.py` — `keywordtool` (hintKeywords)
-- [ ] `nsa.py` — `report` (생성→폴링→다운로드)
-- [ ] `SKILL.md` 작성 (frontmatter + When to use/not + 호출법)
-- [ ] 단위 검증: 서명이 공식 샘플 알고리즘과 일치 (고정 입력 → 기대 base64)
-- [ ] CLI 검증: 키 없이 `--help`, 인자 누락 시 종료코드/메시지 정상
-- [ ] mock 검증: HTTP를 가짜로 갈아끼워 `stats` 한글 라벨·폴백 동작 확인
-- [ ] 문서 정합성: CLAUDE.md 명령 ↔ nsa.py 실제 명령 일치, 링크 유효
+- [x] `scripts/nsa.py` — 서명 코어(`sign`/`headers`/`load_creds`/`env_or_die`)
+- [x] `nsa.py` — HTTP 코어(`api_get`/`api_post`/`die_with_hint`), uri는 path만 서명
+- [x] `nsa.py` — argparse 진입점 + 7개 명령 디스패치
+- [x] `nsa.py` — `stats` (fields/timeRange + 한글 라벨 + CTR/CPC 폴백)
+- [x] `nsa.py` — `accounts`/`campaigns`/`adgroups`/`keywords` 조회
+- [x] `nsa.py` — `keywordtool` (hintKeywords)
+- [x] `nsa.py` — `report` (생성→폴링→다운로드)
+- [x] `SKILL.md` 작성 (frontmatter + When to use/not + 호출법)
+- [x] 단위 검증: 서명이 공식 샘플 알고리즘과 일치 (고정 입력 → 기대 base64)
+- [x] CLI 검증: 키 없이 `--help`, 인자 누락 시 종료코드/메시지 정상
+- [x] mock 검증: HTTP를 가짜로 갈아끼워 `stats` 한글 라벨·폴백 동작 확인
+- [x] 문서 정합성: CLAUDE.md 명령 ↔ nsa.py 실제 명령 일치, 링크 유효
 
 ### Definition of Done (DoD)
 
@@ -104,3 +104,4 @@ python3 scripts/nsa.py campaigns        # → "환경변수 ... 없음" 코드1
 - ADR-003 — 읽기 전용: 쓰기(PUT/DELETE) 미구현
 - ADR-004 — 코워크 미지원: egress 차단으로 로컬 전용
 - ADR-005 — 라이브 검증은 Day 2 분리: 키는 사용자만 발급 가능
+- ADR-006 — 키 없는 검증: `_selftest` + `NSA_MOCK` (의존성 0)
