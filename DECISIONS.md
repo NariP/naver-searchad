@@ -2,6 +2,26 @@
 
 네이버 검색광고 스킬 설계 결정 로그(ADR). 최신이 위로.
 
+## ADR-010 — 환경 진단은 `nsa.py doctor`(크로스플랫폼)에 둠
+
+**Date**: 2026-06-18
+**Status**: Accepted
+
+### Context
+init/doctor가 bash 래퍼(`scripts/nsa`)에만 있어 Windows(=bash 없음)에선 진단조차 못 한다. OS·실행환경 점검을 OS 무관하게 하고 싶다.
+
+### Options
+| 옵션 | 설명 |
+|---|---|
+| A. bash + ps1 양쪽에 진단 로직 | 중복, 동기화 부담 |
+| B. nsa.py에 doctor 내장 | 파이썬은 전 OS 동작, 단일 소스 |
+
+### Decision
+B. `python3 nsa.py doctor` 추가 — OS 감지, 파이썬 버전, 키 공급 상태(env + macOS는 Keychain 점검), 네이버 egress 도달, OS별 다음 단계 안내. 역할 구분: 파이썬 `doctor`=환경 전반(크로스플랫폼), bash 래퍼 `doctor`=macOS Keychain 등록 점검(맥 전용 편의).
+
+### Rationale
+파이썬은 mac/win/linux 모두 실행되므로 진단의 단일 진입점으로 적합. Windows 사용자도 `python nsa.py doctor`로 자기 환경(키 미설정·egress 등)을 바로 확인하고 환경변수 안내를 받는다. 키체인 점검은 macOS에서만 subprocess로 수행하고 타 OS에선 생략.
+
 ## ADR-009 — 셋업 마법사: `scripts/nsa init` / `doctor`
 
 **Date**: 2026-06-18

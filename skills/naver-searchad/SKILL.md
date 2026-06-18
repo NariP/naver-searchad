@@ -30,11 +30,15 @@ metadata:
 
 ## Prerequisites
 
-키 3개가 필요하다. 미설정이면 **셋업 스킬**을 먼저:
-- macOS: `/naver-searchad-setup` (수동 호출) → `scripts/nsa init`
-- 코덱스/CI: 환경변수 직접 — `export NAVER_AD_API_KEY=... NAVER_AD_SECRET_KEY=... NAVER_AD_CUSTOMER_ID=...`
+먼저 환경 진단(어느 OS에서든 실행됨):
+```bash
+python3 scripts/nsa.py doctor   # OS·파이썬·키·네이버 도달 점검 + OS별 다음 단계 안내
+```
 
-설정 여부 점검: `scripts/nsa doctor`
+키 3개가 필요하다. 미설정이면:
+- macOS: `/naver-searchad-setup` (수동) → `scripts/nsa init` (Keychain 저장)
+- Windows: 환경변수 직접 — `$env:NAVER_AD_API_KEY="..."` 등 후 `python scripts\nsa.py ...`
+- 코덱스/Linux/CI: `export NAVER_AD_API_KEY=... NAVER_AD_SECRET_KEY=... NAVER_AD_CUSTOMER_ID=...`
 
 ## How to call
 

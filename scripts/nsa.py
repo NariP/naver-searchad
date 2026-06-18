@@ -261,6 +261,98 @@ def _mock_response(uri, params):
     return {"_mock": True, "uri": uri, "params": params}
 
 
+# ─────────────────────────── doctor (환경 진단) ───────────────────────────
+KEY_NAMES = ("NAVER_AD_API_KEY", "NAVER_AD_SECRET_KEY", "NAVER_AD_CUSTOMER_ID")
+KEY_SHORT = {"NAVER_AD_API_KEY": "API_KEY", "NAVER_AD_SECRET_KEY": "SECRET", "NAVER_AD_CUSTOMER_ID": "CUSTOMER"}
+
+
+def _detect_os():
+    import platform
+    s = platform.system()
+    return {"Darwin": "macOS", "Windows": "Windows", "Linux": "Linux"}.get(s, s or "Unknown")
+
+
+def _keychain_status(name):
+    """macOS 전용: security CLI로 키체인 등록 여부만 점검(값 비노출)."""
+    import shutil
+    import subprocess
+    if not shutil.which("security"):
+        return None
+    acc = os.environ.get("NSA_KEYCHAIN_ACCOUNT") or os.environ.get("USER") or ""
+    try:
+        r = subprocess.run(
+            ["security", "find-generic-password", "-a", acc, "-s", name, "-w"],
+            capture_output=True, timeout=5,
+        )
+        return r.returncode == 0
+    except Exception:
+        return None
+
+
+def _egress_ok():
+    """네이버 API 서버 도달 여부(인증 전, HTTP 코드만). 도달=True."""
+    req = urllib.request.Request(BASE_URL + "/", method="HEAD")
+    try:
+        urllib.request.urlopen(req, timeout=8)
+        return True, "도달"
+    except urllib.error.HTTPError:
+        return True, "도달(서버 응답)"  # 4xx여도 연결은 된 것
+    except Exception as e:
+        return False, f"차단/실패: {getattr(e, 'reason', e)}"
+
+
+def cmd_doctor(args):
+    """OS·실행환경 진단 + 환경별 다음 단계 안내. 어느 OS에서든 실행됨."""
+    osname = _detect_os()
+    print(f"nsa doctor — 환경 진단")
+    print(f"  OS              : {osname}")
+    print(f"  Python          : {sys.version.split()[0]} ({sys.executable})")
+
+    # 키 공급 상태
+    env_have = {k: bool(os.environ.get(k)) for k in KEY_NAMES}
+    print("  키(환경변수)    : " + ", ".join(f"{KEY_SHORT[k]}={'OK' if v else '없음'}" for k, v in env_have.items()))
+
+    kc_note = ""
+    if osname == "macOS":
+        kc = {k: _keychain_status(k) for k in KEY_NAMES}
+        if any(v is not None for v in kc.values()):
+            acc = os.environ.get("NSA_KEYCHAIN_ACCOUNT") or os.environ.get("USER") or "?"
+            print(f"  키(Keychain '{acc}'): " + ", ".join(
+                f"{KEY_SHORT[k]}={'OK' if v else '없음'}" for k, v in kc.items()))
+
+    # 네이버 도달
+    if not args.no_net:
+        ok, msg = _egress_ok()
+        print(f"  네이버 egress   : {'OK' if ok else 'X'} ({msg})")
+    else:
+        ok = None
+        print("  네이버 egress   : (--no-net 으로 건너뜀)")
+
+    # 종합 판정 + OS별 안내
+    keys_ready = all(env_have.values()) or (osname == "macOS" and all(_keychain_status(k) for k in KEY_NAMES))
+    print()
+    if keys_ready and ok is not False:
+        print("→ 준비 완료. 조회 예: python3 scripts/nsa.py campaigns")
+        return
+    print("→ 다음 단계:")
+    if not keys_ready:
+        if osname == "macOS":
+            print("   키 미설정. 셋업: scripts/nsa init  (또는 환경변수 직접 export)")
+        elif osname == "Windows":
+            print("   키 미설정. PowerShell에서 환경변수 지정 후 nsa.py 직접 실행:")
+            print('     $env:NAVER_AD_API_KEY="..."; $env:NAVER_AD_SECRET_KEY="..."; $env:NAVER_AD_CUSTOMER_ID="..."')
+            print("     python scripts\\nsa.py campaigns")
+            print("   (macOS 전용 scripts/nsa 래퍼·키체인은 Windows에서 사용 안 함)")
+        else:
+            print("   키 미설정. 환경변수 export 후 실행:")
+            print("     export NAVER_AD_API_KEY=... NAVER_AD_SECRET_KEY=... NAVER_AD_CUSTOMER_ID=...")
+            print("     python3 scripts/nsa.py campaigns")
+    if ok is False:
+        print("   네이버 egress 차단 — 로컬(클로드 코드/데스크탑/코덱스)에서 실행하세요.")
+        print("   클라우드 샌드박스(코워크)는 네이버 차단으로 조회 불가.")
+    sys.exit(1)
+
+
 # ─────────────────────────── selftest ───────────────────────────
 def cmd_selftest(args):
     """키/네트워크 없이 순수 로직 검증."""
@@ -322,6 +414,9 @@ def build_parser():
     sp = sub.add_parser("keywordtool", help="연관키워드·월 조회수 (/keywordstool)")
     sp.add_argument("--keywords", help="힌트 키워드, 콤마구분")
 
+    sp = sub.add_parser("doctor", help="OS·환경 진단 + 다음 단계 안내 (크로스플랫폼)")
+    sp.add_argument("--no-net", action="store_true", help="네이버 egress 체크 건너뜀")
+
     sub.add_parser("_selftest", help="키 없이 내부 로직 검증")
     return p
 
@@ -334,6 +429,7 @@ DISPATCH = {
     "stats": cmd_stats,
     "report": cmd_report,
     "keywordtool": cmd_keywordtool,
+    "doctor": cmd_doctor,
     "_selftest": cmd_selftest,
 }
 
