@@ -34,6 +34,11 @@ scripts/nsa init
 
 > ⚠️ 클로드가 키 값을 대신 입력하지 않는다. 사용자가 직접 `scripts/nsa init`을 실행한다(시크릿이 대화·로그에 남지 않게).
 
+기본($USER)과 다른 계정명(예: `howbuild`)을 썼다면, 매번 붙이지 않도록 셸 프로필에 한 줄:
+```bash
+echo 'export NSA_KEYCHAIN_ACCOUNT=howbuild' >> ~/.zshrc && source ~/.zshrc
+```
+
 ### 2. 등록 점검 (doctor)
 
 ```bash
@@ -41,6 +46,7 @@ scripts/nsa doctor
 ```
 - 키 3개가 등록됐는지 OK/없음 표시 (**값은 보여주지 않음**)
 - 누락 시 종료코드 1
+- 다른 계정명을 썼으면 `NSA_KEYCHAIN_ACCOUNT=<이름> scripts/nsa doctor`
 
 ## 비-macOS (코덱스/CI)
 
