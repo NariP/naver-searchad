@@ -33,10 +33,11 @@ python3 scripts/nsa.py setup     # 부족한 키를 동의받고 채움 (macOS K
 - macOS 외(Windows/Linux)에선 환경변수 지정 방법을 안내(자동 저장은 macOS만).
 - 대상은 **키뿐**. 파이썬·gws 같은 외부 도구는 채우지 않는다(안내만).
 
-### 1. 키 저장 (init, 대화형 동일 기능)
+### 1. 키 저장 (init, 대화형 — OS별 보안저장소)
 
 ```bash
-scripts/nsa init
+scripts/nsa init           # macOS: Keychain
+.\scripts\nsa.ps1 init     # Windows: 자격증명 관리자 (실측 검증 전)
 ```
 - 대화형: 계정 이름(기본 `$USER`, 회사용이면 `howbuild` 등) → 키 3개 입력
 - 키 입력은 화면에 안 찍힌다(`read -s`)

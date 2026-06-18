@@ -29,9 +29,11 @@
 
 | OS | 키 공급 | 실행 |
 |---|---|---|
-| macOS | Keychain (`scripts/nsa init`) 또는 환경변수 | `scripts/nsa <cmd>` (래퍼) |
-| Windows | 환경변수(`$env:...`) — 키체인/bash 래퍼 없음 | `python scripts\nsa.py <cmd>` |
+| macOS | Keychain (`scripts/nsa init`) 또는 환경변수 | `scripts/nsa <cmd>` (bash 래퍼) |
+| Windows | 자격증명관리자 (`scripts\nsa.ps1 init`) 또는 환경변수 | `scripts\nsa.ps1 <cmd>` (PS 래퍼) |
 | Linux/코덱스/CI | 환경변수(`export ...`) | `python3 scripts/nsa.py <cmd>` |
+
+> ⚠️ **Windows 래퍼(`nsa.ps1`)는 아직 Windows 실측 검증 전이다.** .NET PasswordVault(OS 내장, 모듈 0)를 쓰는 검증된 패턴으로 작성했으나, 실제 Windows 실행 확인은 미완. 맥/리눅스 경로는 검증됨.
 
 ## 자가 점검 (실행 전 확인용)
 

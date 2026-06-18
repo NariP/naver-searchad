@@ -2,6 +2,28 @@
 
 네이버 검색광고 스킬 설계 결정 로그(ADR). 최신이 위로.
 
+## ADR-012 — Windows는 자격증명 관리자 + `nsa.ps1` 래퍼 (맥 키체인과 대칭)
+
+**Date**: 2026-06-19
+**Status**: Accepted (Windows 실측 검증 전)
+
+### Context
+Windows 키 보관을 정해야 함. `.env` 평문은 보안 약화, 자격증명관리자 GUI는 비개발자에 투박. 맥 키체인과 대칭 구조를 원함.
+
+### Options
+| 옵션 | 설명 |
+|---|---|
+| A. `.env` 평문 | 간단하나 비암호화 |
+| B. 자격증명관리자 + CredentialManager 모듈 | 암호화, but `Install-Module` 의존 |
+| C. 자격증명관리자 + .NET PasswordVault | 암호화, OS 내장(모듈 0) |
+| D. 브라우저 폼(OAuth식) → .env | OS무관 UX, but 평문·서버기동 |
+
+### Decision
+C. `scripts/nsa.ps1`(PowerShell) 래퍼가 .NET `Windows.Security.Credentials.PasswordVault`로 저장/조회. 맥 `nsa`(bash)와 대칭: init=대화형 저장(입력 가림), doctor/setup/조회=nsa.py 위임, python 가드 포함. doctor는 `_secure_store_status`로 OS별(mac=Keychain, win=자격증명관리자) 점검.
+
+### Rationale
+의존성 0 원칙 유지(PasswordVault는 Windows 내장). 평문(.env) 회피, 모듈 설치(B) 회피. 맥과 대칭이라 사용법 일관. `nsa.py`는 환경변수만 읽으므로 무수정. **단 맥 개발환경에선 pwsh가 없어 Windows 실측 미완 — 검증된 PasswordVault 패턴으로 작성했으나 Windows 실행 확인 필요(문서에 명시).**
+
 ## ADR-011 — 자동 채움은 별도 `setup` 명령, 범위는 키만
 
 **Date**: 2026-06-19

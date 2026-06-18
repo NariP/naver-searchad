@@ -46,7 +46,7 @@ stdout JSON (한글 라벨) → 클로드가 표로 렌더
 
 ## 주요 명령어
 
-macOS는 `./scripts/nsa <command>` 래퍼 권장(Keychain→env 자동). 아래는 환경변수 직접 사용 시.
+OS별 래퍼 권장(보안저장소→env 자동): macOS `./scripts/nsa <cmd>`(Keychain), Windows `.\scripts\nsa.ps1 <cmd>`(자격증명관리자, 실측 전). 아래는 환경변수 직접 사용 시.
 
 ```bash
 python3 scripts/nsa.py accounts                              # 광고계정 목록

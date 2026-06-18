@@ -289,6 +289,37 @@ def _keychain_status(name):
         return None
 
 
+def _credman_status(name):
+    """Windows 전용: 자격증명 관리자(PasswordVault) 등록 여부 점검(값 비노출)."""
+    import shutil
+    import subprocess
+    ps = shutil.which("powershell") or shutil.which("pwsh")
+    if not ps:
+        return None
+    script = (
+        "try{Add-Type -AssemblyName 'Windows.Security.Credentials.PasswordVault,"
+        "ContentType=WindowsRuntime' -EA SilentlyContinue|Out-Null;"
+        "$v=New-Object Windows.Security.Credentials.PasswordVault;"
+        f"$v.Retrieve('naver-searchad','{name}')|Out-Null;'OK'}}catch{{'NO'}}"
+    )
+    try:
+        r = subprocess.run([ps, "-NoProfile", "-Command", script],
+                           capture_output=True, timeout=10, text=True)
+        return r.stdout.strip() == "OK"
+    except Exception:
+        return None
+
+
+def _secure_store_status(name):
+    """OS 네이티브 보안저장소 등록 여부. mac=Keychain, win=자격증명관리자, 그 외=None."""
+    osn = _detect_os()
+    if osn == "macOS":
+        return _keychain_status(name)
+    if osn == "Windows":
+        return _credman_status(name)
+    return None
+
+
 def _egress_ok():
     """네이버 API 서버 도달 여부(인증 전, HTTP 코드만). 도달=True."""
     req = urllib.request.Request(BASE_URL + "/", method="HEAD")
@@ -312,12 +343,15 @@ def cmd_doctor(args):
     env_have = {k: bool(os.environ.get(k)) for k in KEY_NAMES}
     print("  키(환경변수)    : " + ", ".join(f"{KEY_SHORT[k]}={'OK' if v else '없음'}" for k, v in env_have.items()))
 
-    if osname == "macOS":
-        kc = {k: _keychain_status(k) for k in KEY_NAMES}
-        if any(v is not None for v in kc.values()):
-            acc = os.environ.get("NSA_KEYCHAIN_ACCOUNT") or os.environ.get("USER") or "?"
-            print(f"  키(Keychain '{acc}'): " + ", ".join(
-                f"{KEY_SHORT[k]}={'OK' if v else '없음'}" for k, v in kc.items()))
+    # OS 네이티브 보안저장소 (mac=Keychain, win=자격증명관리자)
+    store_name = {"macOS": "Keychain", "Windows": "자격증명관리자"}.get(osname)
+    ss = {k: _secure_store_status(k) for k in KEY_NAMES}
+    if store_name and any(v is not None for v in ss.values()):
+        tag = ""
+        if osname == "macOS":
+            tag = f" '{os.environ.get('NSA_KEYCHAIN_ACCOUNT') or os.environ.get('USER') or '?'}'"
+        print(f"  키({store_name}{tag}): " + ", ".join(
+            f"{KEY_SHORT[k]}={'OK' if v else '없음'}" for k, v in ss.items()))
 
     # 네이버 도달
     if not args.no_net:
@@ -328,7 +362,7 @@ def cmd_doctor(args):
         print("  네이버 egress   : (--no-net 으로 건너뜀)")
 
     # 종합 판정 + OS별 안내
-    keys_ready = all(env_have.values()) or (osname == "macOS" and all(_keychain_status(k) for k in KEY_NAMES))
+    keys_ready = all(env_have.values()) or all(_secure_store_status(k) for k in KEY_NAMES)
     print()
     if keys_ready and ok is not False:
         print("→ 준비 완료. 조회 예: python3 scripts/nsa.py campaigns")
@@ -338,10 +372,9 @@ def cmd_doctor(args):
         if osname == "macOS":
             print("   키 미설정. 셋업: scripts/nsa init  (또는 환경변수 직접 export)")
         elif osname == "Windows":
-            print("   키 미설정. PowerShell에서 환경변수 지정 후 nsa.py 직접 실행:")
-            print('     $env:NAVER_AD_API_KEY="..."; $env:NAVER_AD_SECRET_KEY="..."; $env:NAVER_AD_CUSTOMER_ID="..."')
-            print("     python scripts\\nsa.py campaigns")
-            print("   (macOS 전용 scripts/nsa 래퍼·키체인은 Windows에서 사용 안 함)")
+            print("   키 미설정. PowerShell 래퍼로 자격증명 관리자에 저장(권장):")
+            print("     .\\scripts\\nsa.ps1 init")
+            print("   또는 환경변수 직접: $env:NAVER_AD_API_KEY=\"...\" 등 후 python scripts\\nsa.py campaigns")
         else:
             print("   키 미설정. 환경변수 export 후 실행:")
             print("     export NAVER_AD_API_KEY=... NAVER_AD_SECRET_KEY=... NAVER_AD_CUSTOMER_ID=...")
@@ -381,12 +414,14 @@ def cmd_setup(args):
         print("키가 이미 설정돼 있습니다. 진단: python3 scripts/nsa.py doctor")
         return
 
+    if osname == "Windows":
+        print("Windows는 PowerShell 래퍼로 자격증명 관리자에 저장하세요:")
+        print("  .\\scripts\\nsa.ps1 init")
+        print("  (또는 환경변수 직접: $env:NAVER_AD_API_KEY=\"...\" 등)")
+        sys.exit(1)
     if osname != "macOS":
-        print("자동 채움은 macOS Keychain에서만 지원합니다. 이 OS에선 환경변수로 직접:")
-        if osname == "Windows":
-            print('  $env:NAVER_AD_API_KEY="..."; $env:NAVER_AD_SECRET_KEY="..."; $env:NAVER_AD_CUSTOMER_ID="..."')
-        else:
-            print("  export NAVER_AD_API_KEY=... NAVER_AD_SECRET_KEY=... NAVER_AD_CUSTOMER_ID=...")
+        print("자동 채움은 macOS Keychain / Windows 자격증명관리자에서 지원합니다. 이 OS에선 환경변수로:")
+        print("  export NAVER_AD_API_KEY=... NAVER_AD_SECRET_KEY=... NAVER_AD_CUSTOMER_ID=...")
         sys.exit(1)
 
     # macOS: 없는 키만 채움
