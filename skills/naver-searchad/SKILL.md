@@ -42,14 +42,23 @@ python3 scripts/nsa.py doctor   # OS·파이썬·키·네이버 도달 점검 + 
 
 ## How to call
 
-macOS Keychain 사용 시 `scripts/nsa` 래퍼(Keychain→env→nsa.py 자동):
+**macOS** — `scripts/nsa` 래퍼(Keychain→env→nsa.py 자동):
 ```bash
 scripts/nsa campaigns
 scripts/nsa stats --ids <campaignId,adgroupId> --since 2026-06-01 --until 2026-06-17
 scripts/nsa keywordtool --keywords 제주여행,게스트하우스
 scripts/nsa report --type AD --date 2026-06-17 --out ./report.tsv
 ```
-환경변수를 직접 쓰면 `python3 scripts/nsa.py <command>` 도 동일하게 동작.
+
+**Windows** — `scripts\nsa.ps1` 래퍼(자격증명관리자→env→nsa.py 자동):
+```powershell
+.\scripts\nsa.ps1 campaigns
+.\scripts\nsa.ps1 stats --ids <campaignId,adgroupId> --since 2026-06-01 --until 2026-06-17
+```
+> 첫 실행 시 "running scripts is disabled" 에러가 나면(Windows 기본 차단):
+> `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` (1회) 후 재시도.
+
+환경변수를 직접 쓰면 어느 OS든 `python3 scripts/nsa.py <command>` 도 동일하게 동작.
 
 전체 명령·필드 매핑 → `../../reference/endpoints.md`, `../../reference/fields.md`.
 인증·서명 동작 → `../../.claude/docs/auth-signature.md`.

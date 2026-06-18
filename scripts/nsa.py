@@ -43,13 +43,55 @@ def die(msg, code=1):
     sys.exit(code)
 
 
+_DOTENV_LOADED = False
+
+
+def _load_dotenv():
+    """`.env` 폴백(평문). 환경변수에 없는 키만 채운다. 의존성 0(표준 파싱).
+
+    탐색: NSA_DOTENV 경로 > 현재 작업 디렉토리 > 레포 루트(scripts/ 상위).
+    KEY=VALUE 형식만, 따옴표/공백 정리, # 주석·빈줄 무시.
+    """
+    global _DOTENV_LOADED
+    if _DOTENV_LOADED:
+        return
+    _DOTENV_LOADED = True
+    here = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.environ.get("NSA_DOTENV"),
+        os.path.join(os.getcwd(), ".env"),
+        os.path.join(os.path.dirname(here), ".env"),  # 레포 루트
+    ]
+    for path in candidates:
+        if not path or not os.path.isfile(path):
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    k, v = line.split("=", 1)
+                    k = k.strip()
+                    v = v.strip().strip('"').strip("'")
+                    if k and v and not os.environ.get(k):
+                        os.environ[k] = v
+        except Exception:
+            pass
+        return  # 첫 번째로 찾은 .env만 사용
+
+
 def env_or_die(name):
     v = os.environ.get(name)
     if not v:
+        _load_dotenv()  # 폴백: .env에서 채워보고 재확인
+        v = os.environ.get(name)
+    if not v:
         die(
-            f"환경변수 {name} 없음. 3개 모두 설정 필요: "
-            "NAVER_AD_API_KEY / NAVER_AD_SECRET_KEY / NAVER_AD_CUSTOMER_ID "
-            "(네이버 검색광고 > 도구 > API 사용 관리에서 발급)",
+            f"키 {name} 없음. 다음 중 하나로 설정: "
+            "①OS 보안저장소(scripts/nsa init · nsa.ps1 init) ②환경변수 ③.env 파일. "
+            "진단: python3 scripts/nsa.py doctor "
+            "(키 발급: 네이버 검색광고 > 도구 > API 사용 관리)",
             code=1,
         )
     return v
@@ -343,6 +385,13 @@ def cmd_doctor(args):
     env_have = {k: bool(os.environ.get(k)) for k in KEY_NAMES}
     print("  키(환경변수)    : " + ", ".join(f"{KEY_SHORT[k]}={'OK' if v else '없음'}" for k, v in env_have.items()))
 
+    # .env 폴백 (있으면 채워보고 표시)
+    _load_dotenv()
+    dotenv_have = {k: bool(os.environ.get(k)) for k in KEY_NAMES}
+    if any(dotenv_have[k] and not env_have[k] for k in KEY_NAMES):
+        print("  키(.env)        : " + ", ".join(
+            f"{KEY_SHORT[k]}={'OK' if dotenv_have[k] and not env_have[k] else '-'}" for k in KEY_NAMES))
+
     # OS 네이티브 보안저장소 (mac=Keychain, win=자격증명관리자)
     store_name = {"macOS": "Keychain", "Windows": "자격증명관리자"}.get(osname)
     ss = {k: _secure_store_status(k) for k in KEY_NAMES}
@@ -361,8 +410,8 @@ def cmd_doctor(args):
         ok = None
         print("  네이버 egress   : (--no-net 으로 건너뜀)")
 
-    # 종합 판정 + OS별 안내
-    keys_ready = all(env_have.values()) or all(_secure_store_status(k) for k in KEY_NAMES)
+    # 종합 판정 (환경변수 직접 / .env 폴백 / OS 보안저장소 중 하나라도 충족)
+    keys_ready = all(os.environ.get(k) for k in KEY_NAMES) or all(_secure_store_status(k) for k in KEY_NAMES)
     print()
     if keys_ready and ok is not False:
         print("→ 준비 완료. 조회 예: python3 scripts/nsa.py campaigns")
@@ -374,7 +423,10 @@ def cmd_doctor(args):
         elif osname == "Windows":
             print("   키 미설정. PowerShell 래퍼로 자격증명 관리자에 저장(권장):")
             print("     .\\scripts\\nsa.ps1 init")
-            print("   또는 환경변수 직접: $env:NAVER_AD_API_KEY=\"...\" 등 후 python scripts\\nsa.py campaigns")
+            print("   ※ 'running scripts is disabled' 에러 시 (Windows 기본 차단):")
+            print("     Set-ExecutionPolicy -Scope CurrentUser RemoteSigned   (1회)")
+            print("     또는 이번만: powershell -ExecutionPolicy Bypass -File .\\scripts\\nsa.ps1 init")
+            print("   환경변수 직접도 가능: $env:NAVER_AD_API_KEY=\"...\" 등 후 python scripts\\nsa.py campaigns")
         else:
             print("   키 미설정. 환경변수 export 후 실행:")
             print("     export NAVER_AD_API_KEY=... NAVER_AD_SECRET_KEY=... NAVER_AD_CUSTOMER_ID=...")

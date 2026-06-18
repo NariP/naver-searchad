@@ -9,6 +9,10 @@
 # 사용:  .\scripts\nsa.ps1 campaigns
 #        .\scripts\nsa.ps1 stats --ids cmp-1 --since 2026-06-01 --until 2026-06-17
 #
+# ── 처음 실행 시 "running scripts is disabled" 에러가 나면 (Windows 기본 차단) ──
+#   현재 사용자만 1회 허용:  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+#   또는 이번 실행만:        powershell -ExecutionPolicy Bypass -File .\scripts\nsa.ps1 doctor
+#
 # 저장소 리소스명(Resource) 접두어: 자격증명 관리자에 "naver-searchad:<KEY>"로 저장.
 
 param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Args)
@@ -51,8 +55,9 @@ function Find-Python {
 
 # ── init: 대화형 저장 (입력 가림) ──
 function Invoke-Init {
-  Write-Host "네이버 검색광고 키 셋업 (Windows 자격증명 관리자)"
+  Write-Host "네이버 검색광고 키 셋업 (Windows 자격증명 관리자에 암호화 저장)"
   Write-Host "  발급: 네이버 검색광고 > 도구 > API 사용 관리"
+  Write-Host "  아래 3개를 차례로 붙여넣으세요. 입력값은 화면에 보이지 않습니다(정상)."
   $prompts = @{
     'NAVER_AD_API_KEY'    = 'API_KEY (액세스 라이선스)'
     'NAVER_AD_SECRET_KEY' = 'SECRET_KEY'
@@ -66,7 +71,9 @@ function Invoke-Init {
     } while ([string]::IsNullOrWhiteSpace($plain))
     Save-Key $k $plain
   }
-  Write-Host "`n저장 완료. 확인: .\scripts\nsa.ps1 doctor"
+  Write-Host "`n저장 완료 (자격증명 관리자). 다음:"
+  Write-Host "  .\scripts\nsa.ps1 doctor      # 등록·환경 확인"
+  Write-Host "  .\scripts\nsa.ps1 campaigns   # 실제 조회"
 }
 
 # ── 디스패치 ──
