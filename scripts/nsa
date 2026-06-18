@@ -6,9 +6,11 @@
 #   커스텀: export NSA_KEYCHAIN_ACCOUNT=howbuild  (회사/공용 계정 구분)
 #
 # 셋업:  ./scripts/nsa init       # 대화형으로 계정명 + 키 3개를 Keychain에 저장
-# 점검:  ./scripts/nsa doctor     # 키가 등록됐는지 확인(값은 안 보여줌)
+# 진단:  ./scripts/nsa doctor     # OS·키·egress 진단 (nsa.py 위임, 크로스플랫폼)
+# 채움:  ./scripts/nsa setup      # 부족한 키 동의받고 채움 (nsa.py 위임)
 # 사용:  ./scripts/nsa campaigns
 #        ./scripts/nsa stats --ids cmp-1 --since 2026-06-01 --until 2026-06-17
+# 주: doctor/setup/조회는 nsa.py(파이썬)로 위임. init만 래퍼가 직접(대화형 저장).
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -92,13 +94,31 @@ load() {
   fi
 }
 
+# ───────── 파이썬 가드 (파이썬 밖의 유일한 방어선) ─────────
+# nsa.py는 파이썬 스크립트라 python3가 없으면 진단조차 못 한다.
+# 자동설치하지 않고 OS별 설치 명령만 안내 후 종료.
+PY=""
+for cand in python3 python; do
+  if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
+done
+if [[ -z "$PY" ]]; then
+  echo "[nsa] Python 3 이 없습니다. nsa는 파이썬으로 동작합니다." >&2
+  case "$(uname -s)" in
+    Darwin) echo "  설치: brew install python3   (또는 https://www.python.org/downloads/)" >&2 ;;
+    Linux)  echo "  설치: sudo apt install python3   (배포판에 맞게)" >&2 ;;
+    *)      echo "  설치: https://www.python.org/downloads/" >&2 ;;
+  esac
+  echo "  설치 후 다시: scripts/nsa doctor" >&2
+  exit 127
+fi
+
 # ───────── 디스패치 ─────────
+# init은 래퍼(대화형 Keychain 저장) 담당. doctor/setup/조회는 파이썬으로 위임.
 case "${1:-}" in
   init)   cmd_init; exit 0 ;;
-  doctor) cmd_doctor; exit 0 ;;
 esac
 
 if command -v security >/dev/null 2>&1; then
   for k in "${KEYS[@]}"; do load "$k"; done
 fi
-exec python3 "$DIR/nsa.py" "$@"
+exec "$PY" "$DIR/nsa.py" "$@"

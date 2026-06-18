@@ -312,7 +312,6 @@ def cmd_doctor(args):
     env_have = {k: bool(os.environ.get(k)) for k in KEY_NAMES}
     print("  키(환경변수)    : " + ", ".join(f"{KEY_SHORT[k]}={'OK' if v else '없음'}" for k, v in env_have.items()))
 
-    kc_note = ""
     if osname == "macOS":
         kc = {k: _keychain_status(k) for k in KEY_NAMES}
         if any(v is not None for v in kc.values()):
@@ -351,6 +350,66 @@ def cmd_doctor(args):
         print("   네이버 egress 차단 — 로컬(클로드 코드/데스크탑/코덱스)에서 실행하세요.")
         print("   클라우드 샌드박스(코워크)는 네이버 차단으로 조회 불가.")
     sys.exit(1)
+
+
+def _keychain_save(name, value):
+    """macOS 전용: security CLI로 키체인에 저장(-U 갱신)."""
+    import subprocess
+    acc = os.environ.get("NSA_KEYCHAIN_ACCOUNT") or os.environ.get("USER") or ""
+    subprocess.run(
+        ["security", "add-generic-password", "-U", "-a", acc, "-s", name, "-w", value,
+         "-D", "naver-searchad", "-j", "naver-searchad API key"],
+        check=True, capture_output=True,
+    )
+    return acc
+
+
+def cmd_setup(args):
+    """진단 후 부족한 키를 동의받고 채운다. (gws·파이썬은 대상 아님)
+
+    - macOS: 없는 키만 입력받아 Keychain 저장.
+    - 그 외: 환경변수 지정 방법 안내(자동 저장 불가).
+    파이썬 자체가 없으면 이 코드는 실행조차 안 되므로(닭-달걀), 래퍼/문서가 안내한다.
+    """
+    import getpass
+    osname = _detect_os()
+
+    # 이미 충족?
+    env_have = all(os.environ.get(k) for k in KEY_NAMES)
+    kc_have = osname == "macOS" and all(_keychain_status(k) for k in KEY_NAMES)
+    if env_have or kc_have:
+        print("키가 이미 설정돼 있습니다. 진단: python3 scripts/nsa.py doctor")
+        return
+
+    if osname != "macOS":
+        print("자동 채움은 macOS Keychain에서만 지원합니다. 이 OS에선 환경변수로 직접:")
+        if osname == "Windows":
+            print('  $env:NAVER_AD_API_KEY="..."; $env:NAVER_AD_SECRET_KEY="..."; $env:NAVER_AD_CUSTOMER_ID="..."')
+        else:
+            print("  export NAVER_AD_API_KEY=... NAVER_AD_SECRET_KEY=... NAVER_AD_CUSTOMER_ID=...")
+        sys.exit(1)
+
+    # macOS: 없는 키만 채움
+    missing = [k for k in KEY_NAMES if not _keychain_status(k)]
+    acc_disp = os.environ.get("NSA_KEYCHAIN_ACCOUNT") or os.environ.get("USER") or "?"
+    print(f"네이버 검색광고 키 셋업 (Keychain 계정 '{acc_disp}')")
+    print(f"  발급: 네이버 검색광고 > 도구 > API 사용 관리")
+    print(f"  채울 항목: {', '.join(KEY_SHORT[k] for k in missing)}")
+    if not args.yes:
+        ans = input("진행할까요? [Y/n] ").strip().lower()
+        if ans in ("n", "no"):
+            print("취소됨.")
+            return
+    prompts = {"NAVER_AD_API_KEY": "API_KEY (액세스 라이선스)",
+               "NAVER_AD_SECRET_KEY": "SECRET_KEY", "NAVER_AD_CUSTOMER_ID": "CUSTOMER_ID"}
+    for k in missing:
+        while True:
+            val = getpass.getpass(f"  {prompts[k]}: ").strip()  # 입력 화면에 안 보임
+            if val:
+                break
+            print("    (빈 값 불가. 다시)")
+        acc = _keychain_save(k, val)
+    print(f"\n저장 완료 (계정 '{acc}'). 확인: python3 scripts/nsa.py doctor")
 
 
 # ─────────────────────────── selftest ───────────────────────────
@@ -417,6 +476,9 @@ def build_parser():
     sp = sub.add_parser("doctor", help="OS·환경 진단 + 다음 단계 안내 (크로스플랫폼)")
     sp.add_argument("--no-net", action="store_true", help="네이버 egress 체크 건너뜀")
 
+    sp = sub.add_parser("setup", help="부족한 키를 동의받고 채움 (macOS Keychain)")
+    sp.add_argument("-y", "--yes", action="store_true", help="확인 프롬프트 생략")
+
     sub.add_parser("_selftest", help="키 없이 내부 로직 검증")
     return p
 
@@ -430,6 +492,7 @@ DISPATCH = {
     "report": cmd_report,
     "keywordtool": cmd_keywordtool,
     "doctor": cmd_doctor,
+    "setup": cmd_setup,
     "_selftest": cmd_selftest,
 }
 

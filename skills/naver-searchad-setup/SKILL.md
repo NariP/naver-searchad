@@ -23,7 +23,17 @@ metadata:
 
 ## 사용법
 
-### 1. 키 저장 (init)
+### 0. 진단 후 자동 채움 (권장, 크로스플랫폼)
+
+```bash
+python3 scripts/nsa.py doctor    # 무엇이 부족한지 진단
+python3 scripts/nsa.py setup     # 부족한 키를 동의받고 채움 (macOS Keychain)
+```
+- `setup`은 **없는 키만** 입력받아 저장. 이미 있으면 건드리지 않음.
+- macOS 외(Windows/Linux)에선 환경변수 지정 방법을 안내(자동 저장은 macOS만).
+- 대상은 **키뿐**. 파이썬·gws 같은 외부 도구는 채우지 않는다(안내만).
+
+### 1. 키 저장 (init, 대화형 동일 기능)
 
 ```bash
 scripts/nsa init
