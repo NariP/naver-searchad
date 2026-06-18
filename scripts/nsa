@@ -1,33 +1,104 @@
 #!/usr/bin/env bash
-# nsa — Keychain에서 키를 꺼내 환경변수로 채운 뒤 nsa.py 실행 (macOS)
+# nsa — 네이버 검색광고 CLI 런처 (macOS Keychain 연동)
 #
-# 사전 1회: 키 3개를 Keychain에 저장
-#   security add-generic-password -U -a "$USER" -s NAVER_AD_API_KEY     -w '값'
-#   security add-generic-password -U -a "$USER" -s NAVER_AD_SECRET_KEY  -w '값'
-#   security add-generic-password -U -a "$USER" -s NAVER_AD_CUSTOMER_ID -w '값'
+# 계정 이름(키체인 'Account')은 NSA_KEYCHAIN_ACCOUNT, 없으면 $USER 로 폴백.
+#   기본:   각자 맥 로그인 이름($USER) (제로 설정)
+#   커스텀: export NSA_KEYCHAIN_ACCOUNT=howbuild  (회사/공용 계정 구분)
 #
+# 셋업:  ./scripts/nsa init       # 대화형으로 계정명 + 키 3개를 Keychain에 저장
+# 점검:  ./scripts/nsa doctor     # 키가 등록됐는지 확인(값은 안 보여줌)
 # 사용:  ./scripts/nsa campaigns
 #        ./scripts/nsa stats --ids cmp-1 --since 2026-06-01 --until 2026-06-17
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ACC="${NSA_KEYCHAIN_ACCOUNT:-$USER}"  # 키체인 계정 이름 (없으면 맥 로그인 이름)
+KEYS=(NAVER_AD_API_KEY NAVER_AD_SECRET_KEY NAVER_AD_CUSTOMER_ID)
 
-# 이미 환경변수가 있으면 그대로 사용(코덱스/CI 등). 없으면 Keychain에서 채움.
+need_macos() {
+  command -v security >/dev/null 2>&1 || {
+    echo "[nsa] 이 명령은 macOS Keychain(security)이 필요합니다." >&2
+    echo "      다른 환경에선 환경변수로 직접 주입하세요:" >&2
+    echo "      export ${KEYS[0]}=... ${KEYS[1]}=... ${KEYS[2]}=..." >&2
+    exit 1
+  }
+}
+
+# ───────── init: 대화형 셋업 ─────────
+cmd_init() {
+  need_macos
+  echo "네이버 검색광고 키 셋업 (macOS Keychain)"
+  echo "발급: 네이버 검색광고 > 도구 > API 사용 관리"
+  echo
+
+  # 1) 계정 이름 — 기본은 $ACC, 엔터 치면 그대로
+  local acc
+  read -r -p "키체인 계정 이름 [$ACC]: " acc
+  acc="${acc:-$ACC}"
+
+  # 2) 키 3개 — read -s 로 화면에 안 찍히게 입력받음
+  local prompts=("API_KEY (액세스 라이선스)" "SECRET_KEY" "CUSTOMER_ID")
+  local i val
+  for i in "${!KEYS[@]}"; do
+    while :; do
+      read -r -s -p "${prompts[$i]}: " val; echo
+      [[ -n "$val" ]] && break
+      echo "  (빈 값은 안 됩니다. 다시)"
+    done
+    security add-generic-password -U -a "$acc" -s "${KEYS[$i]}" -w "$val" \
+      -D "naver-searchad" -j "naver-searchad API key" >/dev/null
+    unset val
+  done
+
+  echo
+  echo "저장 완료 (계정 '$acc'). 검증:"
+  if [[ "$acc" != "$ACC" ]]; then
+    echo "  export NSA_KEYCHAIN_ACCOUNT=$acc   # 계정명을 기본($ACC)과 다르게 지정함 → 셸에 추가 권장"
+  fi
+  echo "  ./scripts/nsa doctor      # 등록 확인"
+  echo "  ./scripts/nsa campaigns   # 실제 호출"
+}
+
+# ───────── doctor: 등록 여부 점검(값 노출 X) ─────────
+cmd_doctor() {
+  need_macos
+  echo "키체인 점검 (계정 '$ACC') — 값은 표시하지 않음"
+  local ok=1 name
+  for name in "${KEYS[@]}"; do
+    if security find-generic-password -a "$ACC" -s "$name" -w >/dev/null 2>&1; then
+      echo "  [OK]    $name"
+    else
+      echo "  [없음]  $name"; ok=0
+    fi
+  done
+  if [[ $ok -eq 1 ]]; then
+    echo "→ 모두 등록됨. ./scripts/nsa campaigns 로 호출하세요."
+  else
+    echo "→ 누락 있음. ./scripts/nsa init 로 셋업하세요."; exit 1
+  fi
+}
+
+# ───────── load: Keychain→env (없으면 안내) ─────────
 load() {
   local name="$1"
-  if [[ -n "${!name:-}" ]]; then return 0; fi
+  [[ -n "${!name:-}" ]] && return 0   # 이미 env에 있으면 그대로(코덱스/CI)
   local val
-  if val="$(security find-generic-password -a "$USER" -s "$name" -w 2>/dev/null)"; then
+  if val="$(security find-generic-password -a "$ACC" -s "$name" -w 2>/dev/null)"; then
     export "$name=$val"
   else
-    echo "[nsa] Keychain에 $name 없음. 먼저 저장하세요:" >&2
-    echo "      security add-generic-password -U -a \"\$USER\" -s $name -w '값'" >&2
+    echo "[nsa] Keychain에 $name 없음 (계정 '$ACC'). 셋업: ./scripts/nsa init" >&2
+    echo "      (다른 계정명: export NSA_KEYCHAIN_ACCOUNT=<이름>)" >&2
     exit 1
   fi
 }
 
-load NAVER_AD_API_KEY
-load NAVER_AD_SECRET_KEY
-load NAVER_AD_CUSTOMER_ID
+# ───────── 디스패치 ─────────
+case "${1:-}" in
+  init)   cmd_init; exit 0 ;;
+  doctor) cmd_doctor; exit 0 ;;
+esac
 
+if command -v security >/dev/null 2>&1; then
+  for k in "${KEYS[@]}"; do load "$k"; done
+fi
 exec python3 "$DIR/nsa.py" "$@"

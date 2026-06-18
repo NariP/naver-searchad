@@ -47,12 +47,17 @@ AWS SigV4 / PG 결제 서명 / GitHub 웹훅 `X-Hub-Signature`와 같은 계열.
 
 평문(`.env`·`.zshrc`) 대신 Keychain에 암호화 저장하고, 래퍼(`scripts/nsa`)가 꺼내 환경변수로 주입한다. `nsa.py`는 환경변수만 읽으므로 코드 변경 없음.
 
-저장(1회, 사용자가 직접 — 값에 실제 키):
+**계정 이름(키체인 Account)**: 래퍼는 `NSA_KEYCHAIN_ACCOUNT`가 있으면 그 값, 없으면 `$USER`로 조회한다. 오픈소스 배포 시 하드코딩을 피하기 위함 — 받는 사람은 설정 없이 자기 `$USER`로 동작하고, 회사/공용 계정으로 구분하려면 `export NSA_KEYCHAIN_ACCOUNT=howbuild`.
+
+저장(1회, 사용자가 직접 — 값에 실제 키. `ACC`=위 계정 이름):
 ```bash
-security add-generic-password -U -a "$USER" -s NAVER_AD_API_KEY     -w '값'
-security add-generic-password -U -a "$USER" -s NAVER_AD_SECRET_KEY  -w '값'
-security add-generic-password -U -a "$USER" -s NAVER_AD_CUSTOMER_ID -w '값'
+ACC="${NSA_KEYCHAIN_ACCOUNT:-$USER}"
+security add-generic-password -U -a "$ACC" -s NAVER_AD_API_KEY     -w '값'
+security add-generic-password -U -a "$ACC" -s NAVER_AD_SECRET_KEY  -w '값'
+security add-generic-password -U -a "$ACC" -s NAVER_AD_CUSTOMER_ID -w '값'
 ```
+GUI(키체인 접근)로 저장 시: 제목=`NAVER_AD_*`, 사용자 이름=`$ACC`, 암호=키 값.
+
 실행: `./scripts/nsa <command>` (래퍼가 Keychain→env→nsa.py).
 
 이미 환경변수가 설정돼 있으면 래퍼는 Keychain을 건너뛴다(코덱스/CI 호환). 즉 코덱스 등 Keychain 없는 환경에선 환경변수로 직접 주입하면 된다.

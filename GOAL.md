@@ -105,3 +105,6 @@ python3 scripts/nsa.py campaigns        # → "환경변수 ... 없음" 코드1
 - ADR-004 — 코워크 미지원: egress 차단으로 로컬 전용
 - ADR-005 — 라이브 검증은 Day 2 분리: 키는 사용자만 발급 가능
 - ADR-006 — 키 없는 검증: `_selftest` + `NSA_MOCK` (의존성 0)
+- ADR-007 — 키 보관: macOS Keychain + 래퍼 (계정명 env 폴백)
+- ADR-008 — 스킬 2개 분리: 조회(자동) + 셋업(수동 `disable-model-invocation`)
+- ADR-009 — 셋업 마법사: `scripts/nsa init` / `doctor`

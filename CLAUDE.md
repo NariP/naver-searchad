@@ -4,10 +4,19 @@
 
 ## Project
 
-- 형태: 스킬(얇은 인덱스) + 단일 파이썬 스크립트(`scripts/nsa.py`)
+- 형태: **스킬 2개**(조회/셋업) + 공유 스크립트(`scripts/nsa`, `scripts/nsa.py`)
 - 의존성: **0개** — 파이썬 표준 라이브러리만 (`hmac`/`hashlib`/`base64`/`urllib`)
-- 인증: HMAC-SHA256 서명 (요청마다 계산). 키는 환경변수로.
+- 인증: HMAC-SHA256 서명 (요청마다 계산). 키는 Keychain/환경변수로.
 - 범위: 조회(GET/조회용 POST)만. 입찰가 변경·삭제 등 쓰기 없음.
+
+### 스킬 2개 (트리거 옵션 분리)
+
+| 스킬 | 역할 | 트리거 |
+|---|---|---|
+| `skills/naver-searchad` | 성과 조회 | **자동** (클로드가 맥락 보고 띄움) |
+| `skills/naver-searchad-setup` | 키 Keychain 저장/점검 | **수동 전용** (`disable-model-invocation: true`) |
+
+셋업을 수동 전용으로 둔 이유: 키 저장은 사용자가 의도적으로 할 일. 자동 트리거 부적합.
 
 ## Architecture
 
@@ -58,6 +67,8 @@ python3 scripts/nsa.py keywordtool --keywords 제주여행,게스트하우스  #
 
 ## 상세 가이드 (네비게이션)
 
+- 조회 스킬: `skills/naver-searchad/SKILL.md` — 자동 트리거
+- 셋업 스킬: `skills/naver-searchad-setup/SKILL.md` — 수동 전용(키 등록/점검)
 - 인증/서명 정책: `.claude/docs/auth-signature.md` — HMAC 서명·헤더·함정
 - 실행 환경 정책: `.claude/docs/environment-policy.md` — 어디서 되고 안 되나
 - 조회 범위 정책: `.claude/docs/scope-policy.md` — 읽기 전용 원칙·금지 작업
