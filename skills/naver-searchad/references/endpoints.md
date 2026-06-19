@@ -43,4 +43,4 @@ GET /keywordstool
 
 ## 출처
 - 공식: https://github.com/naver/searchad-apidoc (python-sample)
-- 인증·서명: `.claude/docs/auth-signature.md`
+- 인증·서명: `auth-signature.md` (같은 references 폴더)

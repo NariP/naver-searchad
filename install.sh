@@ -4,14 +4,14 @@
 # 한 줄 설치:
 #   curl -fsSL https://raw.githubusercontent.com/NariP/naver-searchad/main/install.sh | bash
 #
-# 동작: 레포를 ~/.naver-searchad 에 받아두고(소스 1벌), 두 스킬을
+# 동작: 레포를 ~/.naver-searchad 에 받아두고(소스 1벌), 스킬을
 #       선택한 위치(전역/프로젝트)의 .claude/skills 에 심볼릭링크한다.
 #       scripts/는 레포 안에 그대로 있으므로 경로가 깨지지 않는다.
 set -euo pipefail
 
 REPO_URL="https://github.com/NariP/naver-searchad.git"
 SRC="${NSA_HOME:-$HOME/.naver-searchad}"   # 소스 통째 보관 위치
-SKILLS=(naver-searchad naver-searchad-setup)
+SKILLS=(naver-searchad)   # 단일 스킬(scripts·references를 자체 보유)
 
 say() { printf '%s\n' "$*"; }
 err() { printf '%s\n' "$*" >&2; }
@@ -72,10 +72,11 @@ done
 
 # ── 4) 파이썬 확인 + 안내 ──
 say ""
+SK="$SRC/skills/naver-searchad/scripts"
 if command -v python3 >/dev/null 2>&1 || command -v python >/dev/null 2>&1; then
   say "설치 완료. 다음:"
-  say "  python3 $SRC/scripts/nsa.py doctor    # 환경 진단"
-  say "  ($SRC/scripts/nsa init 로 키 저장)"
+  say "  python3 $SK/nsa.py doctor    # 환경 진단"
+  say "  ($SK/nsa init 로 키 저장)"
 else
   err "⚠️ Python 3 이 없습니다. 설치 후 다시 진단하세요:"
   case "$(uname -s)" in

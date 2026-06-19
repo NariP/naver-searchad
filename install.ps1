@@ -3,13 +3,13 @@
 # 한 줄 설치 (PowerShell):
 #   irm https://raw.githubusercontent.com/NariP/naver-searchad/main/install.ps1 | iex
 #
-# 동작: 레포를 %USERPROFILE%\.naver-searchad 에 받아두고, 두 스킬을
-#       선택한 위치(전역/프로젝트)의 .claude\skills 에 링크/복사한다.
+# 동작: 레포를 %USERPROFILE%\.naver-searchad 에 받아두고, 스킬을
+#       스킬을 선택 위치의 .claude\skills 에 링크/복사한다.
 $ErrorActionPreference = 'Stop'
 
 $RepoUrl = 'https://github.com/NariP/naver-searchad.git'
 $Src     = if ($env:NSA_HOME) { $env:NSA_HOME } else { Join-Path $HOME '.naver-searchad' }
-$Skills  = @('naver-searchad', 'naver-searchad-setup')
+$Skills  = @('naver-searchad')   # 단일 스킬
 
 # ── 0) git 확인 ──
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
@@ -69,8 +69,8 @@ foreach ($s in $Skills) {
 Write-Host ""
 if ((Get-Command python -ErrorAction SilentlyContinue) -or (Get-Command python3 -ErrorAction SilentlyContinue)) {
   Write-Host "설치 완료. 다음:"
-  Write-Host "  python $Src\scripts\nsa.py doctor      # 환경 진단"
-  Write-Host "  $Src\scripts\nsa.ps1 init             # 키 저장(자격증명 관리자)"
+  Write-Host "  python $Src\skills\naver-searchad\scripts\nsa.py doctor      # 환경 진단"
+  Write-Host "  $Src\skills\naver-searchad\scripts\nsa.ps1 init             # 키 저장(자격증명 관리자)"
 } else {
   Write-Warning "Python 3 이 없습니다. 설치 후 다시 진단:"
   Write-Host "  winget install Python.Python.3"

@@ -4,7 +4,7 @@
 표준 라이브러리만 사용. 인증은 HMAC-SHA256 서명(요청마다).
 키는 환경변수: NAVER_AD_API_KEY / NAVER_AD_SECRET_KEY / NAVER_AD_CUSTOMER_ID
 
-정책/필드 상세: ../.claude/docs/*, ../reference/*
+정책/필드 상세: ../references/* (스킬 폴더 내)
 """
 import argparse
 import base64
