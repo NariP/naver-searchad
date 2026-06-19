@@ -10,6 +10,5 @@ __pycache__/
 *.pyc
 .DS_Store
 
-# 결정 로그 — 로컬 전용
-DECISIONS.md
-GOAL.md
+# 내부 작업 문서 (GOAL/DECISIONS 등) — 로컬 전용, 공개 제외
+.claude/.private/

@@ -75,4 +75,4 @@ python3 scripts/nsa.py keywordtool --keywords 제주여행,게스트하우스  #
 - 출력/에러 정책: `.claude/docs/output-policy.md` — JSON 포맷·에러 힌트
 - 엔드포인트 카탈로그(트리거 사전): `reference/endpoints.md`
 - 지표 한글 사전: `reference/fields.md`
-- 작업 목표/완료 조건: `GOAL.md` · 결정 로그: `DECISIONS.md`
+- (내부 전용, 비공개) 작업 목표·결정 로그: `.claude/.private/GOAL.md`, `.claude/.private/DECISIONS.md` — gitignore됨
