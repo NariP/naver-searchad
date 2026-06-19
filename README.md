@@ -87,6 +87,16 @@ python3 scripts/nsa.py campaigns
 
 요청마다 HMAC-SHA256 서명(`X-Timestamp`/`X-API-KEY`/`X-Customer`/`X-Signature`). 시크릿은 네트워크에 직접 노출되지 않으며, 코드·커밋에 키를 박지 않는다(환경변수/보안저장소만).
 
+## 버전 호환성
+
+네이버 검색광고 API는 URL에 명시적 버전 번호가 없다(`api.searchad.naver.com`). 따라서 "API 버전" 대신 **base URL + 사용 엔드포인트 셋 + 검증 시점**으로 호환성을 표기한다.
+
+| 스킬 버전 | 네이버 API base | 사용 엔드포인트 | 라이브 검증 |
+|---|---|---|---|
+| **1.0.0** | `api.searchad.naver.com` | `/stats`, `/ncc/campaigns`, `/ncc/adgroups`, `/ncc/keywords`, `/customer-links`, `/keywordstool`, `/stat-reports` | 2026-06 (campaigns·stats 확인) |
+
+엔드포인트별 상세·필드는 `reference/endpoints.md`. 네이버가 엔드포인트·필드를 바꾸면 스킬 마이너 버전을 올리고 이 표에 추가한다.
+
 ## 라이선스
 
 MIT

@@ -1,6 +1,7 @@
 ---
 name: naver-searchad-setup
 displayName: 네이버 검색광고 키 셋업
+version: 1.0.0
 description: 네이버 검색광고 API 키 3개(API_KEY/SECRET_KEY/CUSTOMER_ID)를 OS 보안저장소(macOS 키체인 / Windows 자격증명관리자)에 안전하게 저장·점검하는 셋업 마법사. 수동 호출 전용 — 키 셋업/재설정/등록 확인이 필요할 때 /naver-searchad-setup 으로 실행한다.
 disable-model-invocation: true
 license: MIT
@@ -41,15 +42,15 @@ python3 scripts/nsa.py setup     # 부족한 키를 동의받고 채움 (macOS K
 scripts/nsa init           # macOS: Keychain
 .\scripts\nsa.ps1 init     # Windows: 자격증명 관리자 (실측 검증 전)
 ```
-- 대화형: 계정 이름(기본 `$USER`, 회사용이면 `howbuild` 등) → 키 3개 입력
+- 대화형: 계정 이름(기본 `$USER`, 회사용이면 `mycompany` 등) → 키 3개 입력
 - 키 입력은 화면에 안 찍힌다(`read -s`)
 - 기본과 다른 계정명을 썼으면 셸에 `export NSA_KEYCHAIN_ACCOUNT=<이름>` 추가 안내
 
 > ⚠️ 클로드가 키 값을 대신 입력하지 않는다. 사용자가 직접 `scripts/nsa init`을 실행한다(시크릿이 대화·로그에 남지 않게).
 
-기본($USER)과 다른 계정명(예: `howbuild`)을 썼다면, 매번 붙이지 않도록 셸 프로필에 한 줄:
+기본($USER)과 다른 계정명(예: `mycompany`)을 썼다면, 매번 붙이지 않도록 셸 프로필에 한 줄:
 ```bash
-echo 'export NSA_KEYCHAIN_ACCOUNT=howbuild' >> ~/.zshrc && source ~/.zshrc
+echo 'export NSA_KEYCHAIN_ACCOUNT=mycompany' >> ~/.zshrc && source ~/.zshrc
 ```
 
 ### 2. 등록 점검 (doctor)
