@@ -1,7 +1,9 @@
 ---
 name: naver-searchad-setup
-description: 네이버 검색광고 API 키 3개(API_KEY/SECRET_KEY/CUSTOMER_ID)를 macOS Keychain에 안전하게 저장·점검하는 셋업 마법사. 수동 호출 전용 — 키 셋업/재설정/등록 확인이 필요할 때 /naver-searchad-setup 으로 실행한다.
+displayName: 네이버 검색광고 키 셋업
+description: 네이버 검색광고 API 키 3개(API_KEY/SECRET_KEY/CUSTOMER_ID)를 OS 보안저장소(macOS 키체인 / Windows 자격증명관리자)에 안전하게 저장·점검하는 셋업 마법사. 수동 호출 전용 — 키 셋업/재설정/등록 확인이 필요할 때 /naver-searchad-setup 으로 실행한다.
 disable-model-invocation: true
+license: MIT
 argument-hint: "init | doctor (생략 시 init)"
 metadata:
   category: marketing

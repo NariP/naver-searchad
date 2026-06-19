@@ -9,3 +9,6 @@ report*.zip
 __pycache__/
 *.pyc
 .DS_Store
+
+# 결정 로그 — 로컬 전용
+DECISIONS.md
