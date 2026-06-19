@@ -48,6 +48,12 @@ if [ -z "$SCOPE" ]; then
 fi
 
 if [ "$SCOPE" = "project" ]; then
+  # 가드: 소스 레포 자신 안에 설치하면 self-link(깨진 링크)가 생긴다 → 막음
+  if [ "$(cd "$(pwd)" && pwd -P)" = "$(cd "$SRC" && pwd -P)" ]; then
+    err "[install] 현재 폴더가 소스 레포($SRC)입니다. 여기엔 프로젝트 설치하지 않습니다."
+    err "          다른 프로젝트 폴더에서 실행하거나 전역 설치(NSA_SCOPE=global)를 쓰세요."
+    exit 1
+  fi
   DEST="$(pwd)/.claude/skills"
 else
   DEST="$HOME/.claude/skills"

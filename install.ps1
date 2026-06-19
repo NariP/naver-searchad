@@ -37,8 +37,16 @@ if (-not $scope) {
   $scope = if ($ans -eq '2') { 'project' } else { 'global' }
 }
 
-$dest = if ($scope -eq 'project') { Join-Path (Get-Location) '.claude\skills' }
-        else { Join-Path $HOME '.claude\skills' }
+if ($scope -eq 'project') {
+  # 가드: 소스 레포 자신 안에 설치하면 self-link(깨진 링크)가 생긴다 → 막음
+  if ((Resolve-Path (Get-Location)).Path -eq (Resolve-Path $Src).Path) {
+    Write-Error "현재 폴더가 소스 레포($Src)입니다. 여기엔 프로젝트 설치하지 않습니다. 다른 폴더 또는 전역 설치를 쓰세요."
+    exit 1
+  }
+  $dest = Join-Path (Get-Location) '.claude\skills'
+} else {
+  $dest = Join-Path $HOME '.claude\skills'
+}
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 
 # ── 3) 링크(심볼릭, 실패 시 복사 폴백) ──

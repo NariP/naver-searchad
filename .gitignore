@@ -12,3 +12,6 @@ __pycache__/
 
 # 내부 작업 문서 (GOAL/DECISIONS 등) — 로컬 전용, 공개 제외
 .claude/.private/
+
+# 설치 위치(프로젝트 스코프) — 레포에 커밋 금지
+.claude/skills/
