@@ -35,7 +35,23 @@
 | `NAVER_AD_SECRET_KEY` | 비밀키 |
 | `NAVER_AD_CUSTOMER_ID` | CUSTOMER ID(계정번호) |
 
-## 설치 & 사용
+## 설치
+
+**방법 1 — skills CLI (권장)**
+```bash
+npx skills add NariP/naver-searchad
+```
+공개 레포에서 두 스킬(`naver-searchad`, `naver-searchad-setup`)을 바로 설치한다.
+
+**방법 2 — 직접 clone**
+```bash
+git clone https://github.com/NariP/naver-searchad.git
+cd naver-searchad
+```
+
+설치 후 아래 순서대로 진행한다. 스크립트는 레포 루트 기준 `scripts/` 에 있다.
+
+## 사용
 
 ### 1) 환경 진단 (어느 OS든)
 ```bash
