@@ -14,7 +14,7 @@ metadata:
 
 네이버 검색광고 API를 감싸 성과를 조회한다. **읽기 전용**, **로컬 실행 전용**. (자동 트리거 스킬)
 
-루트(`scripts/`, `reference/`, `.claude/docs/`)는 이 스킬 디렉토리 기준 `../../` 에 있다.
+> **스크립트 위치**: 실행체(`scripts/nsa.py` 등)는 이 `SKILL.md`가 있는 폴더의 `../../scripts/` 에 있다(레포 루트). `install.sh`로 설치했다면 레포는 `~/.naver-searchad/`(env `NSA_HOME`)에 있으므로 `~/.naver-searchad/scripts/nsa.py` 로 실행한다. 레포를 직접 clone했다면 그 루트 기준 `scripts/nsa.py`.
 
 ## When to use
 

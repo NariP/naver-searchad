@@ -37,19 +37,31 @@
 
 ## 설치
 
-**방법 1 — skills CLI (권장)**
+**방법 1 — 설치 스크립트 (npm 불필요, 권장)**
+
+설치 위치(전역/프로젝트)를 물어보고 스킬을 `.claude/skills`에 링크한다.
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/NariP/naver-searchad/main/install.sh | bash
+```
+```powershell
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/NariP/naver-searchad/main/install.ps1 | iex
+```
+> 레포는 `~/.naver-searchad`(env `NSA_HOME`)에 받아두고, 두 스킬을 심볼릭링크한다.
+> 비대화(파이프) 환경은 전역 설치가 기본. `NSA_SCOPE=project` 로 강제 가능.
+
+**방법 2 — skills CLI**
 ```bash
 npx skills add NariP/naver-searchad
 ```
-공개 레포에서 두 스킬(`naver-searchad`, `naver-searchad-setup`)을 바로 설치한다.
 
-**방법 2 — 직접 clone**
+**방법 3 — 직접 clone**
 ```bash
-git clone https://github.com/NariP/naver-searchad.git
-cd naver-searchad
+git clone https://github.com/NariP/naver-searchad.git && cd naver-searchad
 ```
 
-설치 후 아래 순서대로 진행한다. 스크립트는 레포 루트 기준 `scripts/` 에 있다.
+설치 후 아래 순서대로 진행한다. 스크립트는 레포 루트 `scripts/` 에 있다.
 
 ## 사용
 
